@@ -1,0 +1,8 @@
+xcbsimple
+=========
+simple xcb application
+
+build
+=====
+in order to build xcbsimple you will need xcb headers
+$ make
