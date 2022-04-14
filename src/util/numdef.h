@@ -1,5 +1,5 @@
-#ifndef __XCBSIMPLE_NUMDEF_H__
-#define __XCBSIMPLE_NUMDEF_H__
+#ifndef __XCBSIMPLE_UTIL_NUMDEF_H__
+#define __XCBSIMPLE_UTIL_NUMDEF_H__
 
 #include <stdint.h>
 

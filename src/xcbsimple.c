@@ -17,11 +17,11 @@
 
 #include <stdlib.h>
 
-#include "bitmap.h"
-#include "debug.h"
-#include "keys.h"
-#include "numdef.h"
-#include "window.h"
+#include "base/bitmap.h"
+#include "util/debug.h"
+#include "util/numdef.h"
+#include "x11/keys.h"
+#include "x11/window.h"
 
 static window_t *window;
 

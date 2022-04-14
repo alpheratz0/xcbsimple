@@ -1,6 +1,7 @@
 #include <stdlib.h>
-#include "numdef.h"
-#include "debug.h"
+
+#include "../util/numdef.h"
+#include "../util/debug.h"
 #include "bitmap.h"
 
 extern bitmap_t *

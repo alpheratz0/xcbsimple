@@ -1,7 +1,7 @@
-#ifndef __XCBSIMPLE_BITMAP_H__
-#define __XCBSIMPLE_BITMAP_H__
+#ifndef __XCBSIMPLE_BASE_BITMAP_H__
+#define __XCBSIMPLE_BASE_BITMAP_H__
 
-#include "numdef.h"
+#include "../util/numdef.h"
 
 typedef struct bitmap bitmap_t;
 

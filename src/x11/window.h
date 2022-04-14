@@ -1,10 +1,11 @@
-#ifndef __XCBSIMPLE_WINDOW_H__
-#define __XCBSIMPLE_WINDOW_H__
+#ifndef __XCBSIMPLE_X11_WINDOW_H__
+#define __XCBSIMPLE_X11_WINDOW_H__
 
 #include <xcb/xcb.h>
 #include <xcb/xcb_image.h>
-#include "bitmap.h"
-#include "numdef.h"
+
+#include "../base/bitmap.h"
+#include "../util/numdef.h"
 
 typedef void (*window_key_press_callback_t)(u32 key);
 typedef struct window window_t;
