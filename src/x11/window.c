@@ -33,18 +33,22 @@ x11_get_atom(window_t *window, const char *name)
 extern window_t *
 window_create(const char *title)
 {
-	window_t *window;
+	window_t           *window;
+	xcb_void_cookie_t   window_cookie;
+	xcb_atom_t          net_wm_state,
+	                    net_wm_state_fullscreen,
+	                    wm_protocols,
+	                    wm_delete_window;
 
-	window = malloc(sizeof(window_t));
-	if (!window)
+	if (NULL == (window = malloc(sizeof(window_t)))) {
 		die("error while calling malloc, no memory available");
+	}
 
-	window->connection = xcb_connect(NULL, NULL);
-	if (xcb_connection_has_error(window->connection))
+	if (xcb_connection_has_error(window->connection = xcb_connect(NULL, NULL))) {
 		die("can't open display");
+	}
 
-	window->screen = xcb_setup_roots_iterator(xcb_get_setup(window->connection)).data;
-	if (!window->screen) {
+	if (NULL == (window->screen = xcb_setup_roots_iterator(xcb_get_setup(window->connection)).data)) {
 		xcb_disconnect(window->connection);
 		die("can't get default screen");
 	}
@@ -52,7 +56,7 @@ window_create(const char *title)
 	window->id = xcb_generate_id(window->connection);
 	window->bmp = bitmap_create(window->screen->width_in_pixels, window->screen->height_in_pixels, 0x000000);
 
-	xcb_void_cookie_t window_cookie = xcb_create_window_checked(
+	window_cookie = xcb_create_window_checked(
 		window->connection, XCB_COPY_FROM_PARENT, window->id,
 		window->screen->root, 0, 0, window->bmp->width, window->bmp->height, 0,
 		XCB_WINDOW_CLASS_INPUT_OUTPUT, window->screen->root_visual,
@@ -81,8 +85,8 @@ window_create(const char *title)
 	);
 
 	/* set fullscreen */
-	xcb_atom_t net_wm_state = x11_get_atom(window, "_NET_WM_STATE");
-	xcb_atom_t net_wm_state_fullscreen = x11_get_atom(window, "_NET_WM_STATE_FULLSCREEN");
+	net_wm_state = x11_get_atom(window, "_NET_WM_STATE");
+	net_wm_state_fullscreen = x11_get_atom(window, "_NET_WM_STATE_FULLSCREEN");
 
 	xcb_change_property(
 		window->connection,
@@ -94,8 +98,8 @@ window_create(const char *title)
 	);
 
 	/* set wm protocols */
-	xcb_atom_t wm_protocols = x11_get_atom(window, "WM_PROTOCOLS");
-	xcb_atom_t wm_delete_window = x11_get_atom(window, "WM_DELETE_WINDOW");
+	wm_protocols = x11_get_atom(window, "WM_PROTOCOLS");
+	wm_delete_window = x11_get_atom(window, "WM_DELETE_WINDOW");
 
 	xcb_change_property(
 		window->connection,
