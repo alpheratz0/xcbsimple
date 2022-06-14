@@ -10,7 +10,8 @@
 #include "window.h"
 
 static xcb_atom_t
-x11_get_atom(window_t *window, const char *name) {
+x11_get_atom(window_t *window, const char *name)
+{
 	xcb_atom_t atom;
 	xcb_intern_atom_reply_t *reply;
 
@@ -30,7 +31,8 @@ x11_get_atom(window_t *window, const char *name) {
 }
 
 extern window_t *
-window_create(const char *title) {
+window_create(const char *title)
+{
 	window_t *window;
 
 	window = malloc(sizeof(window_t));
@@ -121,7 +123,8 @@ window_create(const char *title) {
 }
 
 extern void
-window_loop_start(window_t *window) {
+window_loop_start(window_t *window)
+{
 	xcb_generic_event_t *ev;
 	window->running = 1;
 
@@ -149,23 +152,27 @@ window_loop_start(window_t *window) {
 }
 
 extern void
-window_loop_end(window_t *window) {
+window_loop_end(window_t *window)
+{
 	window->running = 0;
 }
 
 extern void
-window_force_redraw(window_t *window) {
+window_force_redraw(window_t *window)
+{
 	xcb_clear_area(window->connection, 1, window->id, 0, 0, 1, 1);
 	xcb_flush(window->connection);
 }
 
 extern void
-window_set_key_press_callback(window_t *window, window_key_press_callback_t cb) {
+window_set_key_press_callback(window_t *window, window_key_press_callback_t cb)
+{
 	window->key_pressed = cb;
 }
 
 extern void
-window_free(window_t *window) {
+window_free(window_t *window)
+{
 	xcb_free_gc(window->connection, window->gc);
 	xcb_disconnect(window->connection);
 	bitmap_free(window->bmp);

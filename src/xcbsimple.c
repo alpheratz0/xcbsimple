@@ -26,7 +26,8 @@
 static window_t *window;
 
 static void
-key_press_callback(u32 key) {
+key_press_callback(u32 key)
+{
 	switch (key) {
 		case KEY_ESCAPE:
 		case KEY_Q:
@@ -40,10 +41,12 @@ key_press_callback(u32 key) {
 }
 
 int
-main(void) {
+main(void)
+{
 	window = window_create("xcbsimple");
 	window_set_key_press_callback(window, key_press_callback);
 	window_loop_start(window);
 	window_free(window);
+
 	return 0;
 }
