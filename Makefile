@@ -15,7 +15,6 @@ all: xcbsimple
 
 ${OBJ}:	src/base/bitmap.h \
 		src/util/debug.h \
-		src/util/numdef.h \
 		src/x11/window.h \
 		src/x11/keys.h
 

@@ -1,11 +1,11 @@
 #include <stdlib.h>
+#include <stdint.h>
 
-#include "../util/numdef.h"
 #include "../util/debug.h"
 #include "bitmap.h"
 
 extern bitmap_t *
-bitmap_create(u32 width, u32 height, u32 color)
+bitmap_create(uint32_t width, uint32_t height, uint32_t color)
 {
 	bitmap_t *bmp;
 
@@ -16,7 +16,7 @@ bitmap_create(u32 width, u32 height, u32 color)
 	bmp->width = width;
 	bmp->height = height;
 
-	if (NULL == (bmp->px = malloc(4*width*height))) {
+	if (NULL == (bmp->px = malloc(sizeof(uint32_t) * width * height))) {
 		die("error while calling malloc, no memory available");
 	}
 
@@ -26,25 +26,25 @@ bitmap_create(u32 width, u32 height, u32 color)
 }
 
 extern void
-bitmap_rect(bitmap_t *bmp, u32 x, u32 y, u32 width, u32 height, u32 color)
+bitmap_rect(bitmap_t *bmp,
+            uint32_t x,
+            uint32_t y,
+            uint32_t width,
+            uint32_t height,
+            uint32_t color)
 {
-	/* top left corner */
-	u32 tlcorner;
-
-	tlcorner = y * bmp->width + x;
-
-	for (u32 i = 0; i < width; ++i) {
-		for (u32 j = 0; j < height; ++j) {
-			bmp->px[tlcorner+j*bmp->width+i] = color;
+	for (uint32_t i = 0; i < width; ++i) {
+		for (uint32_t j = 0; j < height; ++j) {
+			bmp->px[(j+y)*bmp->width+i+x] = color;
 		}
 	}
 }
 
 extern void
-bitmap_clear(bitmap_t *bmp, u32 color)
+bitmap_clear(bitmap_t *bmp, uint32_t color)
 {
-	for (u32 x = 0; x < bmp->width; ++x) {
-		for (u32 y = 0; y < bmp->height; ++y) {
+	for (uint32_t x = 0; x < bmp->width; ++x) {
+		for (uint32_t y = 0; y < bmp->height; ++y) {
 			bmp->px[y*bmp->width+x] = color;
 		}
 	}

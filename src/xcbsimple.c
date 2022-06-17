@@ -16,17 +16,17 @@
 */
 
 #include <stdlib.h>
+#include <stdint.h>
 
 #include "base/bitmap.h"
 #include "util/debug.h"
-#include "util/numdef.h"
 #include "x11/keys.h"
 #include "x11/window.h"
 
 static window_t *window;
 
 static void
-key_press_callback(u32 key)
+key_press_callback(uint32_t key)
 {
 	switch (key) {
 		case KEY_ESCAPE:
@@ -43,7 +43,7 @@ key_press_callback(u32 key)
 int
 main(void)
 {
-	window = window_create("xcbsimple");
+	window = window_create("xcbsimple", "xcbsimple");
 	window_set_key_press_callback(window, key_press_callback);
 	window_loop_start(window);
 	window_free(window);

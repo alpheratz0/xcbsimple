@@ -1,13 +1,13 @@
 #ifndef __XCBSIMPLE_X11_WINDOW_H__
 #define __XCBSIMPLE_X11_WINDOW_H__
 
+#include <stdint.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_image.h>
 
 #include "../base/bitmap.h"
-#include "../util/numdef.h"
 
-typedef void (*window_key_press_callback_t)(u32 key);
+typedef void (*window_key_press_callback_t)(uint32_t key);
 typedef struct window window_t;
 
 struct window {
@@ -17,12 +17,12 @@ struct window {
 	xcb_gcontext_t gc;
 	xcb_image_t *image;
 	bitmap_t *bmp;
-	u32 running;
+	uint32_t running;
 	window_key_press_callback_t key_pressed;
 };
 
 extern window_t *
-window_create(const char *title);
+window_create(const char *title, const char *class);
 
 extern void
 window_loop_start(window_t *window);
