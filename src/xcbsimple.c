@@ -17,6 +17,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <unistd.h>
 
 #include "base/bitmap.h"
 #include "util/debug.h"
@@ -43,6 +44,9 @@ key_press_callback(uint32_t key)
 int
 main(void)
 {
+	/* unique seed between different runs */
+	srand((unsigned int)(getuid()));
+
 	window = window_create("xcbsimple", "xcbsimple");
 	window_set_key_press_callback(window, key_press_callback);
 	window_loop_start(window);
