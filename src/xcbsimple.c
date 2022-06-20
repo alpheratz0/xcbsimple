@@ -45,7 +45,7 @@ int
 main(void)
 {
 	/* unique seed between different runs */
-	srand((unsigned int)(getuid()));
+	srand((unsigned int)(getpid()));
 
 	window = window_create("xcbsimple", "xcbsimple");
 	window_set_key_press_callback(window, key_press_callback);
