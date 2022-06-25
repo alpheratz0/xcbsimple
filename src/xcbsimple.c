@@ -24,7 +24,7 @@
 #include "x11/keys.h"
 #include "x11/window.h"
 
-static window_t *window;
+static struct window *window;
 
 static void
 key_press_callback(uint32_t key)

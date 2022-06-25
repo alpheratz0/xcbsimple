@@ -25,21 +25,25 @@
 
 #include "../base/bitmap.h"
 #include "../util/debug.h"
+#include "../util/xmalloc.h"
 #include "window.h"
 
 static xcb_atom_t
-x11_get_atom(xcb_connection_t *conn, const char *name)
+xatom(xcb_connection_t *conn, const char *name)
 {
 	xcb_atom_t atom;
+	xcb_generic_error_t *error;
+	xcb_intern_atom_cookie_t cookie;
 	xcb_intern_atom_reply_t *reply;
 
-	reply = xcb_intern_atom_reply(
-		conn,
-		xcb_intern_atom_unchecked(
-			conn, 1, strlen(name), name
-		),
-		NULL
-	);
+	error = NULL;
+	cookie = xcb_intern_atom(conn, 1, strlen(name), name);
+	reply = xcb_intern_atom_reply(conn, cookie, &error);
+
+	if (NULL != error) {
+		dief("xcb_intern_atom failed with error code: %d",
+				(int)(error->error_code));
+	}
 
 	atom = reply->atom;
 	free(reply);
@@ -50,28 +54,20 @@ x11_get_atom(xcb_connection_t *conn, const char *name)
 static void
 window_set_fullscreen(xcb_connection_t *conn, xcb_window_t wid)
 {
-	xcb_atom_t net_wm_state, net_wm_state_fullscreen;
-
-	net_wm_state = x11_get_atom(conn, "_NET_WM_STATE");
-	net_wm_state_fullscreen = x11_get_atom(conn, "_NET_WM_STATE_FULLSCREEN");
-
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, wid,
-		net_wm_state, XCB_ATOM_ATOM, 32, 1, &net_wm_state_fullscreen
+		xatom(conn, "_NET_WM_STATE"), XCB_ATOM_ATOM, 32, 1,
+		(const xcb_atom_t[]) { xatom(conn, "_NET_WM_STATE_FULLSCREEN") }
 	);
 }
 
 static void
 window_enable_wm_delete_window(xcb_connection_t *conn, xcb_window_t wid)
 {
-	xcb_atom_t wm_protocols, wm_delete_window;
-
-	wm_protocols = x11_get_atom(conn, "WM_PROTOCOLS");
-	wm_delete_window = x11_get_atom(conn, "WM_DELETE_WINDOW");
-
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, wid,
-		wm_protocols, XCB_ATOM_ATOM, 32, 1, &wm_delete_window
+		xatom(conn, "WM_PROTOCOLS"), XCB_ATOM_ATOM, 32, 1,
+		(const xcb_atom_t[]) { xatom(conn, "WM_DELETE_WINDOW") }
 	);
 }
 
@@ -108,7 +104,7 @@ window_set_wm_class(xcb_connection_t *conn,
 	);
 }
 
-extern window_t *
+extern struct window *
 window_create(const char *title, const char *class)
 {
 	xcb_connection_t *conn;
@@ -116,8 +112,8 @@ window_create(const char *title, const char *class)
 	xcb_window_t wid;
 	xcb_gcontext_t gc;
 	xcb_image_t *image;
-	bitmap_t *bmp;
-	window_t *window;
+	struct bitmap *bmp;
+	struct window *window;
 	uint32_t evmask;
 
 	if (xcb_connection_has_error((conn = xcb_connect(NULL, NULL)))) {
@@ -159,9 +155,7 @@ window_create(const char *title, const char *class)
 	xcb_map_window(conn, wid);
 	xcb_flush(conn);
 
-	if (NULL == (window = malloc(sizeof(window_t)))) {
-		die("error while calling malloc, no memory available");
-	}
+	window = xmalloc(sizeof(struct window));
 
 	window->running = 0;
 	window->connection = conn;
@@ -175,7 +169,7 @@ window_create(const char *title, const char *class)
 }
 
 extern void
-window_loop_start(window_t *window)
+window_loop_start(struct window *window)
 {
 	xcb_generic_event_t *ev;
 	xcb_key_press_event_t *kpev;
@@ -193,7 +187,7 @@ window_loop_start(window_t *window)
 
 					/* check if the wm sent a delete window message */
 					/* https://www.x.org/docs/ICCCM/icccm.pdf */
-					if (atom == x11_get_atom(window->connection, "WM_DELETE_WINDOW")) {
+					if (atom == xatom(window->connection, "WM_DELETE_WINDOW")) {
 						window_loop_end(window);
 					}
 
@@ -219,26 +213,26 @@ window_loop_start(window_t *window)
 }
 
 extern void
-window_loop_end(window_t *window)
+window_loop_end(struct window *window)
 {
 	window->running = 0;
 }
 
 extern void
-window_force_redraw(window_t *window)
+window_force_redraw(struct window *window)
 {
 	xcb_clear_area(window->connection, 1, window->id, 0, 0, 1, 1);
 	xcb_flush(window->connection);
 }
 
 extern void
-window_set_key_press_callback(window_t *window, window_key_press_callback_t cb)
+window_set_key_press_callback(struct window *window, window_key_press_callback_t cb)
 {
 	window->key_pressed = cb;
 }
 
 extern void
-window_free(window_t *window)
+window_free(struct window *window)
 {
 	xcb_free_gc(window->connection, window->gc);
 	xcb_disconnect(window->connection);
