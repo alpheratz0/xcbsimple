@@ -1,8 +1,16 @@
-xcbsimple
-=========
-simple xcb application
+]|~ xcbsimple ~|[
 
-build
-=====
-in order to build xcbsimple you will need xcb headers
+Example of an xcb application than changes
+the color when a key is pressed.
+
+]|~ build ~|[
+
+In order to build xcbsimple you will need xcb and xcb-image headers.
 $ make
+
+]|~ license ~|[
+
+This program is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License
+version 2 as published by the Free Software Foundation.
+See LICENSE for more details.
