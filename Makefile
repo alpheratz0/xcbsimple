@@ -1,29 +1,17 @@
-LDLIBS = -lxcb -lxcb-image
+CC      = cc
+CFLAGS  = -std=c99 -pedantic -Wall -Wextra -Os
+LDLIBS  = -lxcb -lxcb-image
 LDFLAGS = -s ${LDLIBS}
-INCS = -I/usr/include
-CFLAGS = -std=c99 -pedantic -Wall -Wextra -Os ${INCS}
-CC = cc
-
-SRC = src/xcbsimple.c \
-	  src/base/bitmap.c \
-	  src/util/debug.c \
-	  src/util/xmalloc.c \
-	  src/x11/window.c
-
-OBJ = ${SRC:.c=.o}
 
 all: xcbsimple
 
-${OBJ}:	src/base/bitmap.h \
-		src/util/debug.h \
-		src/util/xmalloc.h \
-		src/x11/window.h \
-		src/x11/keys.h
+.c.o:
+	${CC} -c ${CFLAGS} $<
 
-xcbsimple: ${OBJ}
-	${CC} -o $@ ${OBJ} ${LDFLAGS}
+xcbsimple: xcbsimple.o
+	${CC} -o $@ $< ${LDFLAGS}
 
 clean:
-	rm -f xcbsimple ${OBJ}
+	rm -f xcbsimple xcbsimple.o
 
 .PHONY: all clean
