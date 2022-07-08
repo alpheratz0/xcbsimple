@@ -179,7 +179,6 @@ h_expose(UNUSED xcb_expose_event_t *ev)
 	}
 
 	xcb_image_put(conn, window, gc, image, 0, 0, 0);
-	xcb_flush(conn);
 }
 
 static void
