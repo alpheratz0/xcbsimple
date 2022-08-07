@@ -1,17 +1,15 @@
+.POSIX:
+.PHONY: all clean
+
 CC      = cc
 CFLAGS  = -std=c99 -pedantic -Wall -Wextra -Os
 LDLIBS  = -lxcb -lxcb-image
-LDFLAGS = -s ${LDLIBS}
+LDFLAGS = -s
 
 all: xcbsimple
 
-.c.o:
-	${CC} -c ${CFLAGS} $<
-
 xcbsimple: xcbsimple.o
-	${CC} -o $@ $< ${LDFLAGS}
+	$(CC) $(LDFLAGS) -o xcbsimple xcbsimple.o $(LDLIBS)
 
 clean:
 	rm -f xcbsimple xcbsimple.o
-
-.PHONY: all clean
