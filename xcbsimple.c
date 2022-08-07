@@ -204,7 +204,7 @@ h_expose(UNUSED xcb_expose_event_t *ev)
 static void
 h_key_press(UNUSED xcb_key_press_event_t *ev)
 {
-	xcb_clear_area(conn, 1, window, 0, 0, 1, 1);
+	xcb_clear_area(conn, 1, window, 0, 0, 0, 0);
 	xcb_flush(conn);
 }
 
