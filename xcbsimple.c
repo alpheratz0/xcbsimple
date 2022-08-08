@@ -134,7 +134,7 @@ create_window(void)
 	image = xcb_image_create_native(
 		conn, screen->width_in_pixels, screen->height_in_pixels,
 		XCB_IMAGE_FORMAT_Z_PIXMAP, screen->root_depth, px,
-		sizeof(uint32_t)*pixel_count, (uint8_t *)(px)
+		sizeof(uint32_t) * pixel_count, (uint8_t *)(px)
 	);
 
 	/* set WM_NAME */
