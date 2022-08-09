@@ -1,7 +1,7 @@
 ]|~ xcbsimple ~|[
 
 Example of an xcb application than changes
-the color when a key is pressed.
+the color when ctrl+space is pressed.
 
 ]|~ build ~|[
 
