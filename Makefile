@@ -3,7 +3,7 @@
 
 CC      = cc
 CFLAGS  = -std=c99 -pedantic -Wall -Wextra -Os
-LDLIBS  = -lxcb -lxcb-image
+LDLIBS  = -lxcb -lxcb-image -lxcb-keysyms
 LDFLAGS = -s
 
 all: xcbsimple
