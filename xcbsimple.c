@@ -42,7 +42,9 @@
 #include <unistd.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_image.h>
+#include <xcb/xcb_keysyms.h>
 #include <xcb/xproto.h>
+#include <xkbcommon/xkbcommon-keysyms.h>
 
 #define UNUSED __attribute__((unused))
 
@@ -50,6 +52,7 @@ static xcb_connection_t *conn;
 static xcb_window_t window;
 static xcb_gcontext_t gc;
 static xcb_image_t *image;
+static xcb_key_symbols_t *ksyms;
 static uint32_t pixel_count;
 static uint32_t *px;
 
@@ -116,6 +119,7 @@ create_window(void)
 		die("error while calling malloc, no memory available");
 	}
 
+	ksyms = xcb_key_symbols_alloc(conn);
 	window = xcb_generate_id(conn);
 	gc = xcb_generate_id(conn);
 
@@ -125,7 +129,8 @@ create_window(void)
 		screen->root_visual, XCB_CW_EVENT_MASK,
 		(const uint32_t[]) {
 			XCB_EVENT_MASK_EXPOSURE |
-			XCB_EVENT_MASK_KEY_PRESS
+			XCB_EVENT_MASK_KEY_PRESS |
+			XCB_EVENT_MASK_KEYMAP_STATE
 		}
 	);
 
@@ -173,8 +178,19 @@ static void
 destroy_window(void)
 {
 	xcb_free_gc(conn, gc);
+	xcb_key_symbols_free(ksyms);
 	xcb_image_destroy(image);
 	xcb_disconnect(conn);
+}
+
+static void
+paint_solid_color(uint32_t color)
+{
+	size_t i;
+
+	for (i = 0; i < pixel_count; ++i) {
+		px[i] = color;
+	}
 }
 
 static void
@@ -191,21 +207,31 @@ h_client_message(xcb_client_message_event_t *ev)
 static void
 h_expose(UNUSED xcb_expose_event_t *ev)
 {
-	size_t i;
-	uint32_t color;
-
-	for (color = rand(), i = 0; i < pixel_count; ++i) {
-		px[i] = color;
-	}
-
 	xcb_image_put(conn, window, gc, image, 0, 0, 0);
 }
 
 static void
-h_key_press(UNUSED xcb_key_press_event_t *ev)
+h_key_press(xcb_key_press_event_t *ev)
 {
-	xcb_clear_area(conn, 1, window, 0, 0, 0, 0);
-	xcb_flush(conn);
+	xcb_keysym_t key;
+
+	key = xcb_key_symbols_get_keysym(ksyms, ev->detail, 0);
+
+	switch (key) {
+		case XKB_KEY_space:
+			if (ev->state & XCB_MOD_MASK_CONTROL) {
+				paint_solid_color(rand());
+				xcb_clear_area(conn, 1, window, 0, 0, 0, 0);
+				xcb_flush(conn);
+			}
+			break;
+	}
+}
+
+static void
+h_mapping_notify(xcb_mapping_notify_event_t *ev)
+{
+	xcb_refresh_keyboard_mapping(ksyms, ev);
 }
 
 int
@@ -228,6 +254,9 @@ main(void)
 				break;
 			case XCB_KEY_PRESS:
 				h_key_press((xcb_key_press_event_t *)(ev));
+				break;
+			case XCB_MAPPING_NOTIFY:
+				h_mapping_notify((xcb_mapping_notify_event_t *)(ev));
 				break;
 		}
 
