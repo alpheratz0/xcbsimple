@@ -5,7 +5,8 @@ the color when ctrl+space is pressed.
 
 ]|~ build ~|[
 
-In order to build xcbsimple you will need xcb and xcb-image headers.
+In order to build xcbsimple you will need xcb, xcb-image and
+xcb-keysyms headers.
 $ make
 
 ]|~ license ~|[
