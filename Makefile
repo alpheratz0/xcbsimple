@@ -1,10 +1,7 @@
 .POSIX:
 .PHONY: all clean
 
-CC      = cc
-CFLAGS  = -std=c99 -pedantic -Wall -Wextra -Os
-LDLIBS  = -lxcb -lxcb-image -lxcb-keysyms
-LDFLAGS = -s
+include config.mk
 
 all: xcbsimple
 
