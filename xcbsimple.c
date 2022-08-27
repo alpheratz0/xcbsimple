@@ -49,12 +49,14 @@
 #define UNUSED __attribute__((unused))
 
 static xcb_connection_t *conn;
+static xcb_screen_t *screen;
 static xcb_window_t window;
 static xcb_gcontext_t gc;
 static xcb_image_t *image;
 static xcb_key_symbols_t *ksyms;
-static uint32_t pixel_count;
-static uint32_t *px;
+static uint32_t color;
+static uint32_t width, height;
+static uint32_t *px, pc;
 
 static void
 die(const char *err)
@@ -102,8 +104,6 @@ get_atom(const char *name)
 static void
 create_window(void)
 {
-	xcb_screen_t *screen;
-
 	if (xcb_connection_has_error(conn = xcb_connect(NULL, NULL))) {
 		die("can't open display");
 	}
@@ -113,9 +113,11 @@ create_window(void)
 		die("can't get default screen");
 	}
 
-	pixel_count = screen->width_in_pixels * screen->height_in_pixels;
+	width = 800;
+	height = 600;
+	pc = width * height;
 
-	if (NULL == (px = malloc(pixel_count * sizeof(uint32_t)))) {
+	if (NULL == (px = malloc(pc * sizeof(uint32_t)))) {
 		die("error while calling malloc, no memory available");
 	}
 
@@ -125,21 +127,22 @@ create_window(void)
 
 	xcb_create_window(
 		conn, XCB_COPY_FROM_PARENT, window, screen->root,
-		0, 0, 800, 600, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT,
+		0, 0, width, height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT,
 		screen->root_visual, XCB_CW_EVENT_MASK,
 		(const uint32_t[]) {
 			XCB_EVENT_MASK_EXPOSURE |
 			XCB_EVENT_MASK_KEY_PRESS |
-			XCB_EVENT_MASK_KEYMAP_STATE
+			XCB_EVENT_MASK_KEYMAP_STATE |
+			XCB_EVENT_MASK_STRUCTURE_NOTIFY
 		}
 	);
 
 	xcb_create_gc(conn, gc, window, 0, NULL);
 
 	image = xcb_image_create_native(
-		conn, screen->width_in_pixels, screen->height_in_pixels,
-		XCB_IMAGE_FORMAT_Z_PIXMAP, screen->root_depth, px,
-		sizeof(uint32_t) * pixel_count, (uint8_t *)(px)
+		conn, width, height, XCB_IMAGE_FORMAT_Z_PIXMAP,
+		screen->root_depth, px, sizeof(uint32_t) * pc,
+		(uint8_t *)(px)
 	);
 
 	/* set WM_NAME */
@@ -188,7 +191,7 @@ paint_solid_color(uint32_t color)
 {
 	size_t i;
 
-	for (i = 0; i < pixel_count; ++i) {
+	for (i = 0; i < pc; ++i) {
 		px[i] = color;
 	}
 }
@@ -220,12 +223,37 @@ h_key_press(xcb_key_press_event_t *ev)
 	switch (key) {
 		case XKB_KEY_space:
 			if (ev->state & XCB_MOD_MASK_CONTROL) {
-				paint_solid_color(rand());
+				paint_solid_color((color = rand()));
 				xcb_image_put(conn, window, gc, image, 0, 0, 0);
 				xcb_flush(conn);
 			}
 			break;
 	}
+}
+
+static void
+h_configure_notify(xcb_configure_notify_event_t *ev)
+{
+	if (width == ev->width && height == ev->height) {
+		return;
+	}
+
+	width = ev->width;
+	height = ev->height;
+	pc = width * height;
+
+	xcb_image_destroy(image);
+	px = malloc(sizeof(uint32_t) * pc);
+
+	image = xcb_image_create_native(
+		conn, width, height, XCB_IMAGE_FORMAT_Z_PIXMAP,
+		screen->root_depth, px, sizeof(uint32_t) * pc,
+		(uint8_t *)(px)
+	);
+
+	paint_solid_color(color);
+	xcb_image_put(conn, window, gc, image, 0, 0, 0);
+	xcb_flush(conn);
 }
 
 static void
@@ -254,6 +282,9 @@ main(void)
 				break;
 			case XCB_KEY_PRESS:
 				h_key_press((xcb_key_press_event_t *)(ev));
+				break;
+			case XCB_CONFIGURE_NOTIFY:
+				h_configure_notify((xcb_configure_notify_event_t *)(ev));
 				break;
 			case XCB_MAPPING_NOTIFY:
 				h_mapping_notify((xcb_mapping_notify_event_t *)(ev));
