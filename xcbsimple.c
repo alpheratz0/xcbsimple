@@ -125,16 +125,16 @@ create_window(void)
 	window = xcb_generate_id(conn);
 	gc = xcb_generate_id(conn);
 
-	xcb_create_window(
-		conn, XCB_COPY_FROM_PARENT, window, screen->root,
-		0, 0, width, height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT,
+	xcb_create_window_aux(
+		conn, XCB_COPY_FROM_PARENT, window, screen->root, 0, 0,
+		width, height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT,
 		screen->root_visual, XCB_CW_EVENT_MASK,
-		(const uint32_t[]) {
-			XCB_EVENT_MASK_EXPOSURE |
-			XCB_EVENT_MASK_KEY_PRESS |
-			XCB_EVENT_MASK_KEYMAP_STATE |
-			XCB_EVENT_MASK_STRUCTURE_NOTIFY
-		}
+		(const xcb_create_window_value_list_t []) {{
+			.event_mask = XCB_EVENT_MASK_EXPOSURE |
+			              XCB_EVENT_MASK_KEY_PRESS |
+			              XCB_EVENT_MASK_KEYMAP_STATE |
+			              XCB_EVENT_MASK_STRUCTURE_NOTIFY
+		}}
 	);
 
 	xcb_create_gc(conn, gc, window, 0, NULL);
