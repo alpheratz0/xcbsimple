@@ -271,6 +271,7 @@ main(void)
 	srand((unsigned int)(getpid()));
 
 	create_window();
+	paint_solid_color((color = rand()));
 
 	while ((ev = xcb_wait_for_event(conn))) {
 		switch (ev->response_type & ~0x80) {
