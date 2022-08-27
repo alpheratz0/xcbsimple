@@ -86,14 +86,12 @@ get_atom(const char *name)
 	xcb_intern_atom_cookie_t cookie;
 	xcb_intern_atom_reply_t *reply;
 
-	error = NULL;
 	cookie = xcb_intern_atom(conn, 0, strlen(name), name);
 	reply = xcb_intern_atom_reply(conn, cookie, &error);
 
-	if (NULL != error) {
+	if (NULL != error)
 		dief("xcb_intern_atom failed with error code: %d",
 				(int)(error->error_code));
-	}
 
 	atom = reply->atom;
 	free(reply);
@@ -104,22 +102,17 @@ get_atom(const char *name)
 static void
 create_window(void)
 {
-	if (xcb_connection_has_error(conn = xcb_connect(NULL, NULL))) {
+	if (xcb_connection_has_error(conn = xcb_connect(NULL, NULL)))
 		die("can't open display");
-	}
 
-	if (NULL == (screen = xcb_setup_roots_iterator(xcb_get_setup(conn)).data)) {
-		xcb_disconnect(conn);
+	if (NULL == (screen = xcb_setup_roots_iterator(xcb_get_setup(conn)).data))
 		die("can't get default screen");
-	}
 
-	width = 800;
-	height = 600;
+	width = height = 600;
 	pc = width * height;
 
-	if (NULL == (px = malloc(pc * sizeof(uint32_t)))) {
+	if (NULL == (px = malloc(sizeof(uint32_t) * pc)))
 		die("error while calling malloc, no memory available");
-	}
 
 	ksyms = xcb_key_symbols_alloc(conn);
 	window = xcb_generate_id(conn);
@@ -140,23 +133,20 @@ create_window(void)
 	xcb_create_gc(conn, gc, window, 0, NULL);
 
 	image = xcb_image_create_native(
-		conn, width, height, XCB_IMAGE_FORMAT_Z_PIXMAP,
-		screen->root_depth, px, sizeof(uint32_t) * pc,
-		(uint8_t *)(px)
+		conn, width, height, XCB_IMAGE_FORMAT_Z_PIXMAP, screen->root_depth,
+		px, sizeof(uint32_t) * pc, (uint8_t *)(px)
 	);
 
 	/* set WM_NAME */
 	xcb_change_property(
-		conn, XCB_PROP_MODE_REPLACE, window,
-		XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8,
-		sizeof("xcbsimple") - 1, "xcbsimple"
+		conn, XCB_PROP_MODE_REPLACE, window, XCB_ATOM_WM_NAME,
+		XCB_ATOM_STRING, 8, sizeof("xcbsimple") - 1, "xcbsimple"
 	);
 
 	/* set WM_CLASS */
 	xcb_change_property(
-		conn, XCB_PROP_MODE_REPLACE, window,
-		XCB_ATOM_WM_CLASS, XCB_ATOM_STRING, 8,
-		sizeof("xcbsimple") * 2, "xcbsimple\0xcbsimple\0"
+		conn, XCB_PROP_MODE_REPLACE, window, XCB_ATOM_WM_CLASS,
+		XCB_ATOM_STRING, 8, sizeof("xcbsimple") * 2, "xcbsimple\0xcbsimple\0"
 	);
 
 	/* add WM_DELETE_WINDOW to WM_PROTOCOLS */
@@ -191,9 +181,8 @@ paint_solid_color(uint32_t color)
 {
 	size_t i;
 
-	for (i = 0; i < pc; ++i) {
+	for (i = 0; i < pc; ++i)
 		px[i] = color;
-	}
 }
 
 static void
@@ -234,9 +223,8 @@ h_key_press(xcb_key_press_event_t *ev)
 static void
 h_configure_notify(xcb_configure_notify_event_t *ev)
 {
-	if (width == ev->width && height == ev->height) {
+	if (width == ev->width && height == ev->height)
 		return;
-	}
 
 	width = ev->width;
 	height = ev->height;
@@ -246,9 +234,8 @@ h_configure_notify(xcb_configure_notify_event_t *ev)
 	px = malloc(sizeof(uint32_t) * pc);
 
 	image = xcb_image_create_native(
-		conn, width, height, XCB_IMAGE_FORMAT_Z_PIXMAP,
-		screen->root_depth, px, sizeof(uint32_t) * pc,
-		(uint8_t *)(px)
+		conn, width, height, XCB_IMAGE_FORMAT_Z_PIXMAP, screen->root_depth,
+		px, sizeof(uint32_t) * pc, (uint8_t *)(px)
 	);
 
 	paint_solid_color(color);
@@ -294,6 +281,8 @@ main(void)
 
 		free(ev);
 	}
+
+	destroy_window();
 
 	return 0;
 }
