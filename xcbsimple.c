@@ -221,7 +221,7 @@ h_key_press(xcb_key_press_event_t *ev)
 		case XKB_KEY_space:
 			if (ev->state & XCB_MOD_MASK_CONTROL) {
 				paint_solid_color(rand());
-				xcb_clear_area(conn, 1, window, 0, 0, 0, 0);
+				xcb_image_put(conn, window, gc, image, 0, 0, 0);
 				xcb_flush(conn);
 			}
 			break;
