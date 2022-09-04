@@ -125,7 +125,6 @@ create_window(void)
 		(const xcb_create_window_value_list_t []) {{
 			.event_mask = XCB_EVENT_MASK_EXPOSURE |
 			              XCB_EVENT_MASK_KEY_PRESS |
-			              XCB_EVENT_MASK_KEYMAP_STATE |
 			              XCB_EVENT_MASK_STRUCTURE_NOTIFY
 		}}
 	);
@@ -246,7 +245,8 @@ h_configure_notify(xcb_configure_notify_event_t *ev)
 static void
 h_mapping_notify(xcb_mapping_notify_event_t *ev)
 {
-	xcb_refresh_keyboard_mapping(ksyms, ev);
+	if (ev->count > 0)
+		xcb_refresh_keyboard_mapping(ksyms, ev);
 }
 
 int
