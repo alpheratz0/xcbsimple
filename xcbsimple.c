@@ -59,14 +59,7 @@ static uint32_t width, height;
 static uint32_t *px, pc;
 
 static void
-die(const char *err)
-{
-	fprintf(stderr, "xcbsimple: %s\n", err);
-	exit(1);
-}
-
-static void
-dief(const char *fmt, ...)
+die(const char *fmt, ...)
 {
 	va_list args;
 
@@ -90,7 +83,7 @@ get_atom(const char *name)
 	reply = xcb_intern_atom_reply(conn, cookie, &error);
 
 	if (NULL != error)
-		dief("xcb_intern_atom failed with error code: %d",
+		die("xcb_intern_atom failed with error code: %d",
 				(int)(error->error_code));
 
 	atom = reply->atom;
