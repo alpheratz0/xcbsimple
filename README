@@ -1,15 +1,9 @@
-]|~ xcbsimple ~|[
-
-Example of an xcb application than changes
+xcbsimple is an example of an xcb application that changes
 the color when ctrl+space is pressed.
 
-]|~ build ~|[
-
-In order to build xcbsimple you will need xcb, xcb-image and
-xcb-keysyms headers.
-$ make
-
-]|~ license ~|[
+This program requires libxcb, libxcb-image and
+libxcb-keysyms to be installed.
+In order to build this program you need to run `make`.
 
 This program is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License
