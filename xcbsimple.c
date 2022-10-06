@@ -127,17 +127,6 @@ get_atom(const char *name)
 }
 
 static void
-set_title(const char *title)
-{
-	xcb_change_property(
-		conn, XCB_PROP_MODE_REPLACE, window, get_atom("_NET_WM_NAME"),
-		get_atom("UTF8_STRING"), 8, strlen(title), title
-	);
-
-	xcb_flush(conn);
-}
-
-static void
 create_window(void)
 {
 	if (xcb_connection_has_error(conn = xcb_connect(NULL, NULL)))
@@ -174,10 +163,10 @@ create_window(void)
 		px, sizeof(uint32_t) * pc, (uint8_t *)(px)
 	);
 
-	/* set WM_NAME */
+	/* set _NET_WM_NAME */
 	xcb_change_property(
-		conn, XCB_PROP_MODE_REPLACE, window, XCB_ATOM_WM_NAME,
-		XCB_ATOM_STRING, 8, sizeof("xcbsimple") - 1, "xcbsimple"
+		conn, XCB_PROP_MODE_REPLACE, window, get_atom("_NET_WM_NAME"),
+		get_atom("UTF8_STRING"), 8, sizeof("xcbsimple") - 1, "xcbsimple"
 	);
 
 	/* set WM_CLASS */
@@ -227,13 +216,7 @@ prepare_render(void)
 static void
 set_color(uint32_t new_color)
 {
-	char title[255];
-
 	color = new_color;
-
-	/* update the title */
-	snprintf(title, sizeof(title), "xcbsimple | %06x", color);
-	set_title(title);
 }
 
 static void
