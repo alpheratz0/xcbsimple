@@ -46,6 +46,8 @@
 #include <xcb/xproto.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
+#include "fo.c"
+
 #define UNUSED __attribute__((unused))
 
 static xcb_connection_t *conn;
@@ -57,6 +59,7 @@ static xcb_key_symbols_t *ksyms;
 static uint32_t color;
 static uint32_t width, height;
 static uint32_t *px, pc;
+static const char *message = "hello world\nthis is a sample text\n\t\tfeel free to edit!\n";
 
 static void
 die(const char *fmt, ...)
@@ -69,6 +72,37 @@ die(const char *fmt, ...)
 	va_end(args);
 	fputc('\n', stderr);
 	exit(1);
+}
+
+static void
+render_text(const char *text, uint32_t x, uint32_t y, uint32_t area_width, uint32_t area_height)
+{
+	uint32_t cx, cy, gx, gy;
+	unsigned char *glyph;
+	const char *p;
+
+	p = text;
+	cx = x;
+	cy = y;
+
+	while (*p != '\0') {
+		if (*p == '\n') {
+			cx = x;
+			cy += 10;
+		} else if (*p == '\t') {
+			cx += 7*4;
+		} else {
+			glyph = five_by_seven + *p*7;
+			for (gy = 0; gy < 7; ++gy)
+				for (gx = 0; gx < 5; ++gx)
+					if (glyph[gy] & (1 << (4 - gx)) && cy+gy < height && cy+gy-y < area_height
+							&& cx+gx < width && cx+gx-x < area_width)
+						px[(cy+gy)*width+cx+gx] = 0xffffff;
+			cx += 7;
+		}
+
+		++p;
+	}
 }
 
 static xcb_atom_t
@@ -180,12 +214,14 @@ destroy_window(void)
 }
 
 static void
-paint_solid_color(uint32_t color)
+prepare_render(void)
 {
 	size_t i;
 
 	for (i = 0; i < pc; ++i)
 		px[i] = color;
+
+	render_text(message, 20, 20, width - 40, height - 40);
 }
 
 static void
@@ -228,7 +264,7 @@ h_key_press(xcb_key_press_event_t *ev)
 		case XKB_KEY_space:
 			if (ev->state & XCB_MOD_MASK_CONTROL) {
 				set_color(rand() % 0xffffff);
-				paint_solid_color(color);
+				prepare_render();
 				xcb_image_put(conn, window, gc, image, 0, 0, 0);
 				xcb_flush(conn);
 			}
@@ -254,7 +290,7 @@ h_configure_notify(xcb_configure_notify_event_t *ev)
 		px, sizeof(uint32_t) * pc, (uint8_t *)(px)
 	);
 
-	paint_solid_color(color);
+	prepare_render();
 	xcb_image_put(conn, window, gc, image, 0, 0, 0);
 	xcb_flush(conn);
 }
@@ -276,7 +312,7 @@ main(void)
 
 	create_window();
 	set_color(rand() % 0xffffff);
-	paint_solid_color(color);
+	prepare_render();
 
 	while ((ev = xcb_wait_for_event(conn))) {
 		switch (ev->response_type & ~0x80) {
