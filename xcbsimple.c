@@ -93,6 +93,17 @@ get_atom(const char *name)
 }
 
 static void
+set_title(const char *title)
+{
+	xcb_change_property(
+		conn, XCB_PROP_MODE_REPLACE, window, get_atom("_NET_WM_NAME"),
+		get_atom("UTF8_STRING"), 8, strlen(title), title
+	);
+
+	xcb_flush(conn);
+}
+
+static void
 create_window(void)
 {
 	if (xcb_connection_has_error(conn = xcb_connect(NULL, NULL)))
@@ -145,14 +156,14 @@ create_window(void)
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, window,
 		get_atom("WM_PROTOCOLS"), XCB_ATOM_ATOM, 32, 1,
-		(const xcb_atom_t[]) { get_atom("WM_DELETE_WINDOW") }
+		(const xcb_atom_t []) { get_atom("WM_DELETE_WINDOW") }
 	);
 
 	/* set FULLSCREEN */
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, window,
 		get_atom("_NET_WM_STATE"), XCB_ATOM_ATOM, 32, 1,
-		(const xcb_atom_t[]) { get_atom("_NET_WM_STATE_FULLSCREEN") }
+		(const xcb_atom_t []) { get_atom("_NET_WM_STATE_FULLSCREEN") }
 	);
 
 	xcb_map_window(conn, window);
@@ -172,9 +183,14 @@ static void
 paint_solid_color(uint32_t color)
 {
 	size_t i;
+	char title[255];
 
 	for (i = 0; i < pc; ++i)
 		px[i] = color;
+
+	/* update the title */
+	snprintf(title, sizeof(title), "xcbsimple #%06x", color);
+	set_title(title);
 }
 
 static void
@@ -255,21 +271,11 @@ main(void)
 
 	while ((ev = xcb_wait_for_event(conn))) {
 		switch (ev->response_type & ~0x80) {
-			case XCB_CLIENT_MESSAGE:
-				h_client_message((xcb_client_message_event_t *)(ev));
-				break;
-			case XCB_EXPOSE:
-				h_expose((xcb_expose_event_t *)(ev));
-				break;
-			case XCB_KEY_PRESS:
-				h_key_press((xcb_key_press_event_t *)(ev));
-				break;
-			case XCB_CONFIGURE_NOTIFY:
-				h_configure_notify((xcb_configure_notify_event_t *)(ev));
-				break;
-			case XCB_MAPPING_NOTIFY:
-				h_mapping_notify((xcb_mapping_notify_event_t *)(ev));
-				break;
+			case XCB_CLIENT_MESSAGE:     h_client_message((void *)(ev)); break;
+			case XCB_EXPOSE:             h_expose((void *)(ev)); break;
+			case XCB_KEY_PRESS:          h_key_press((void *)(ev)); break;
+			case XCB_CONFIGURE_NOTIFY:   h_configure_notify((void *)(ev)); break;
+			case XCB_MAPPING_NOTIFY:     h_mapping_notify((void *)(ev)); break;
 		}
 
 		free(ev);
