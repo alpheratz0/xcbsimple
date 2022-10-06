@@ -232,7 +232,7 @@ set_color(uint32_t new_color)
 	color = new_color;
 
 	/* update the title */
-	snprintf(title, sizeof(title), "xcbsimple #%06x", color);
+	snprintf(title, sizeof(title), "xcbsimple | %06x", color);
 	set_title(title);
 }
 
