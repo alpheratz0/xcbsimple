@@ -183,10 +183,17 @@ static void
 paint_solid_color(uint32_t color)
 {
 	size_t i;
-	char title[255];
 
 	for (i = 0; i < pc; ++i)
 		px[i] = color;
+}
+
+static void
+set_color(uint32_t new_color)
+{
+	char title[255];
+
+	color = new_color;
 
 	/* update the title */
 	snprintf(title, sizeof(title), "xcbsimple #%06x", color);
@@ -220,7 +227,8 @@ h_key_press(xcb_key_press_event_t *ev)
 	switch (key) {
 		case XKB_KEY_space:
 			if (ev->state & XCB_MOD_MASK_CONTROL) {
-				paint_solid_color((color = rand()));
+				set_color(rand() % 0xffffff);
+				paint_solid_color(color);
 				xcb_image_put(conn, window, gc, image, 0, 0, 0);
 				xcb_flush(conn);
 			}
@@ -267,7 +275,8 @@ main(void)
 	srand((unsigned int)(getpid()));
 
 	create_window();
-	paint_solid_color((color = rand()));
+	set_color(rand() % 0xffffff);
+	paint_solid_color(color);
 
 	while ((ev = xcb_wait_for_event(conn))) {
 		switch (ev->response_type & ~0x80) {
