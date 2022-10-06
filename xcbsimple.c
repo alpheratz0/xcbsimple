@@ -49,6 +49,7 @@
 #include "fo.c"
 
 #define UNUSED __attribute__((unused))
+#define MESSAGE "hello world\nthis is a sample text\n\t\tfeel free to edit!\n"
 
 static xcb_connection_t *conn;
 static xcb_screen_t *screen;
@@ -59,7 +60,6 @@ static xcb_key_symbols_t *ksyms;
 static uint32_t color;
 static uint32_t width, height;
 static uint32_t *px, pc;
-static const char *message = "hello world\nthis is a sample text\n\t\tfeel free to edit!\n";
 
 static void
 die(const char *fmt, ...)
@@ -221,7 +221,7 @@ prepare_render(void)
 	for (i = 0; i < pc; ++i)
 		px[i] = color;
 
-	render_text(message, 20, 20, width - 40, height - 40);
+	render_text(MESSAGE, 20, 20, width - 40, height - 40);
 }
 
 static void
