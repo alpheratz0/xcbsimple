@@ -166,13 +166,14 @@ create_window(void)
 	/* set _NET_WM_NAME */
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, window, get_atom("_NET_WM_NAME"),
-		get_atom("UTF8_STRING"), 8, sizeof("xcbsimple") - 1, "xcbsimple"
+		get_atom("UTF8_STRING"), 8, strlen("xcbsimple"), "xcbsimple"
 	);
 
 	/* set WM_CLASS */
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, window, XCB_ATOM_WM_CLASS,
-		XCB_ATOM_STRING, 8, sizeof("xcbsimple") * 2, "xcbsimple\0xcbsimple\0"
+		XCB_ATOM_STRING, 8, strlen("xcbsimple\0xcbsimple\0"),
+		"xcbsimple\0xcbsimple\0"
 	);
 
 	/* add WM_DELETE_WINDOW to WM_PROTOCOLS */
