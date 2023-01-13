@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2022 <alpheratz99@protonmail.com>
+	Copyright (C) 2022-2023 <alpheratz99@protonmail.com>
 
 	This program is free software; you can redistribute it and/or modify it under
 	the terms of the GNU General Public License version 2 as published by the
@@ -90,14 +90,15 @@ render_text(const char *text, uint32_t x, uint32_t y, uint32_t area_width, uint3
 			cx = x;
 			cy += 10;
 		} else if (*p == '\t') {
-			cx += 7*4;
+			cx += 7 * 4;
 		} else {
 			glyph = five_by_seven + *p*7;
 			for (gy = 0; gy < 7; ++gy)
 				for (gx = 0; gx < 5; ++gx)
-					if (glyph[gy] & (1 << (4 - gx)) && cy+gy < height && cy+gy-y < area_height
-							&& cx+gx < width && cx+gx-x < area_width)
-						px[(cy+gy)*width+cx+gx] = 0xffffff;
+					if (glyph[gy] & (1 << (4 - gx))
+							&& cy + gy < height && cy + gy - y < area_height
+							&& cx + gx <  width && cx + gx - x <  area_width)
+						px[(cy + gy) * width + cx + gx] = 0xffffff;
 			cx += 7;
 		}
 
