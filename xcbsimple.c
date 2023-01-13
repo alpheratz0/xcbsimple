@@ -60,6 +60,7 @@ static xcb_key_symbols_t *ksyms;
 static uint32_t color;
 static uint32_t width, height;
 static uint32_t *px, pc;
+static int running;
 
 static void
 die(const char *fmt, ...)
@@ -226,10 +227,8 @@ h_client_message(xcb_client_message_event_t *ev)
 {
 	/* check if the wm sent a delete window message */
 	/* https://www.x.org/docs/ICCCM/icccm.pdf */
-	if (ev->data.data32[0] == get_atom("WM_DELETE_WINDOW")) {
-		destroy_window();
-		exit(0);
-	}
+	if (ev->data.data32[0] == get_atom("WM_DELETE_WINDOW"))
+		running = 0;
 }
 
 static void
@@ -298,8 +297,9 @@ main(void)
 	create_window();
 	set_color(rand() % 0xffffff);
 	prepare_render();
+	running = 1;
 
-	while ((ev = xcb_wait_for_event(conn))) {
+	while (running && (ev = xcb_wait_for_event(conn))) {
 		switch (ev->response_type & ~0x80) {
 			case XCB_CLIENT_MESSAGE:     h_client_message((void *)(ev)); break;
 			case XCB_EXPOSE:             h_expose((void *)(ev)); break;
