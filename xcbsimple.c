@@ -34,6 +34,8 @@
 
 */
 
+#define _XOPEN_SOURCE 500
+
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -49,8 +51,9 @@
 #include "fo.c"
 
 #define UNUSED __attribute__((unused))
-#define MESSAGE "hello world\nthis is a sample text\n\t\tfeel free to edit!\n"
+#define DEFAULT_MESSAGE "hello world\nthis is a sample text\n\t\tfeel free to edit!\n"
 
+static char *message;
 static xcb_connection_t *conn;
 static xcb_screen_t *screen;
 static xcb_window_t window;
@@ -213,7 +216,7 @@ prepare_render(void)
 	for (i = 0; i < pc; ++i)
 		px[i] = color;
 
-	render_text(MESSAGE, 20, 20, width - 40, height - 40);
+	render_text(message, 20, 20, width - 40, height - 40);
 }
 
 static void
@@ -286,10 +289,34 @@ h_mapping_notify(xcb_mapping_notify_event_t *ev)
 		xcb_refresh_keyboard_mapping(ksyms, ev);
 }
 
+static char *
+readfile_str(const char *path)
+{
+	FILE *fp;
+	long file_size;
+	char *raw_data;
+
+	if (NULL == (fp = fopen(path, "r")))
+		return strdup("File not found");
+
+	fseek(fp, 0, SEEK_END);
+	file_size = ftell(fp);
+	fseek(fp, 0, SEEK_SET);
+	raw_data = malloc(file_size + 1);
+
+	fread(raw_data, 1, file_size, fp);
+	raw_data[file_size] = '\0';
+	fclose(fp);
+
+	return raw_data;
+}
+
 int
-main(void)
+main(int argc, char **argv)
 {
 	xcb_generic_event_t *ev;
+
+	message = argc > 1 ? readfile_str(argv[1]) : strdup(DEFAULT_MESSAGE);
 
 	/* seed rand with the current process id */
 	srand((unsigned int)(getpid()));
@@ -312,6 +339,7 @@ main(void)
 	}
 
 	destroy_window();
+	free(message);
 
 	return 0;
 }
