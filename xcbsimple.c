@@ -250,14 +250,14 @@ h_key_press(xcb_key_press_event_t *ev)
 	key = xcb_key_symbols_get_keysym(ksyms, ev->detail, 0);
 
 	switch (key) {
-		case XKB_KEY_space:
-			if (ev->state & XCB_MOD_MASK_CONTROL) {
-				set_color(rand() % 0xffffff);
-				prepare_render();
-				xcb_image_put(conn, window, gc, image, 0, 0, 0);
-				xcb_flush(conn);
-			}
-			break;
+	case XKB_KEY_space:
+		if (ev->state & XCB_MOD_MASK_CONTROL) {
+			set_color(rand() % 0xffffff);
+			prepare_render();
+			xcb_image_put(conn, window, gc, image, 0, 0, 0);
+			xcb_flush(conn);
+		}
+		break;
 	}
 }
 
@@ -329,11 +329,11 @@ main(int argc, char **argv)
 
 	while (!should_close && (ev = xcb_wait_for_event(conn))) {
 		switch (ev->response_type & ~0x80) {
-			case XCB_CLIENT_MESSAGE:     h_client_message((void *)(ev)); break;
-			case XCB_EXPOSE:             h_expose((void *)(ev)); break;
-			case XCB_KEY_PRESS:          h_key_press((void *)(ev)); break;
-			case XCB_CONFIGURE_NOTIFY:   h_configure_notify((void *)(ev)); break;
-			case XCB_MAPPING_NOTIFY:     h_mapping_notify((void *)(ev)); break;
+		case XCB_CLIENT_MESSAGE:     h_client_message((void *)(ev)); break;
+		case XCB_EXPOSE:             h_expose((void *)(ev)); break;
+		case XCB_KEY_PRESS:          h_key_press((void *)(ev)); break;
+		case XCB_CONFIGURE_NOTIFY:   h_configure_notify((void *)(ev)); break;
+		case XCB_MAPPING_NOTIFY:     h_mapping_notify((void *)(ev)); break;
 		}
 
 		free(ev);
