@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_image.h>
 #include <xcb/xcb_keysyms.h>
@@ -297,9 +298,16 @@ readfile_str(const char *path)
 	FILE *fp;
 	long file_size;
 	char *raw_data;
+	struct stat sb;
+
+	if (stat(path, &sb) < 0)
+		return strdup("Could not stat file");
+
+	if (!S_ISREG(sb.st_mode))
+		return strdup("Path does not belong to a file");
 
 	if (NULL == (fp = fopen(path, "r")))
-		return strdup("File not found");
+		return strdup("Cannot open file");
 
 	fseek(fp, 0, SEEK_END);
 	file_size = ftell(fp);
