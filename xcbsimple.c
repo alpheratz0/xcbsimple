@@ -54,7 +54,14 @@
 #include "fo.c"
 
 #define UNUSED __attribute__((unused))
-#define DEFAULT_MESSAGE "hello world\nthis is a sample text\n\t\tfeel free to edit!\n"
+#define DEFAULT_MESSAGE "hi\nthis is a sample text\n\t\tfeel free to edit!\n"
+#define RECT(x,y,w,h) ((const Rect) { x, y, w, h })
+
+typedef struct {
+	uint32_t x, y;
+	uint32_t width;
+	uint32_t height;
+} Rect;
 
 static char *message;
 static xcb_connection_t *conn;
@@ -82,19 +89,19 @@ die(const char *fmt, ...)
 }
 
 static void
-render_text(const char *text, uint32_t x, uint32_t y, uint32_t area_width, uint32_t area_height)
+render_text(const char *text, const Rect r)
 {
 	uint32_t cx, cy, gx, gy;
 	unsigned char *glyph;
 	const char *p;
 
 	p = text;
-	cx = x;
-	cy = y;
+	cx = r.x;
+	cy = r.y;
 
 	while (*p != '\0') {
 		if (*p == '\n') {
-			cx = x;
+			cx = r.x;
 			cy += 10;
 		} else if (*p == '\t') {
 			cx += 7 * 4;
@@ -103,8 +110,8 @@ render_text(const char *text, uint32_t x, uint32_t y, uint32_t area_width, uint3
 			for (gy = 0; gy < 7; ++gy)
 				for (gx = 0; gx < 5; ++gx)
 					if (glyph[gy] & (1 << (4 - gx))
-							&& cy + gy < height && cy + gy - y < area_height
-							&& cx + gx <  width && cx + gx - x <  area_width)
+							&& cy + gy < height && cy + gy - r.y < r.height
+							&& cx + gx <  width && cx + gx - r.x <  r.width)
 						px[(cy + gy) * width + cx + gx] = 0xffffff;
 			cx += 7;
 		}
@@ -125,8 +132,8 @@ get_atom(const char *name)
 	reply = xcb_intern_atom_reply(conn, cookie, &error);
 
 	if (NULL != error)
-		die("xcb_intern_atom failed with error code: %d",
-				(int)(error->error_code));
+		die("xcb_intern_atom failed with error code: %hhu",
+				error->error_code);
 
 	atom = reply->atom;
 	free(reply);
@@ -171,27 +178,23 @@ create_window(void)
 		px, sizeof(uint32_t) * pc, (uint8_t *)(px)
 	);
 
-	/* set _NET_WM_NAME */
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, window, get_atom("_NET_WM_NAME"),
 		get_atom("UTF8_STRING"), 8, strlen("xcbsimple"), "xcbsimple"
 	);
 
-	/* set WM_CLASS */
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, window, XCB_ATOM_WM_CLASS,
 		XCB_ATOM_STRING, 8, strlen("xcbsimple\0xcbsimple\0"),
 		"xcbsimple\0xcbsimple\0"
 	);
 
-	/* add WM_DELETE_WINDOW to WM_PROTOCOLS */
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, window,
 		get_atom("WM_PROTOCOLS"), XCB_ATOM_ATOM, 32, 1,
 		(const xcb_atom_t []) { get_atom("WM_DELETE_WINDOW") }
 	);
 
-	/* set FULLSCREEN */
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, window,
 		get_atom("_NET_WM_STATE"), XCB_ATOM_ATOM, 32, 1,
@@ -219,7 +222,7 @@ prepare_render(void)
 	for (i = 0; i < pc; ++i)
 		px[i] = color;
 
-	render_text(message, 20, 20, width - 40, height - 40);
+	render_text(message, RECT(20, 20, width - 40, height - 40));
 }
 
 static void
