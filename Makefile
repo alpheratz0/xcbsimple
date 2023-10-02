@@ -6,7 +6,7 @@ include config.mk
 all: xcbsimple
 
 xcbsimple: xcbsimple.o
-	$(CC) $(LDFLAGS) -o xcbsimple xcbsimple.o $(LDLIBS)
+	$(CC) $(LDFLAGS) -o xcbsimple xcbsimple.o
 
 clean:
 	rm -f xcbsimple xcbsimple.o
