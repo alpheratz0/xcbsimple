@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2022-2023 <alpheratz99@protonmail.com>
+	Copyright (C) 2022-2025 <alpheratz99@protonmail.com>
 
 	This program is free software; you can redistribute it and/or modify it
 	under the terms of the GNU General Public License version 2 as published by
@@ -56,6 +56,9 @@
 #define UNUSED __attribute__((unused))
 #define DEFAULT_MESSAGE "hi\nthis is a sample text\n\t\tfeel free to edit!\n"
 #define RECT(x,y,w,h) ((const Rect) { x, y, w, h })
+
+#define XCBSIMPLE_WM_NAME "xcbsimple"
+#define XCBSIMPLE_WM_CLASS "xcbsimple\0xcbsimple\0"
 
 typedef struct {
 	uint32_t x, y;
@@ -180,13 +183,13 @@ create_window(void)
 
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, window, get_atom("_NET_WM_NAME"),
-		get_atom("UTF8_STRING"), 8, strlen("xcbsimple"), "xcbsimple"
+		get_atom("UTF8_STRING"), 8, sizeof(XCBSIMPLE_WM_NAME) - 1, XCBSIMPLE_WM_NAME
 	);
 
 	xcb_change_property(
 		conn, XCB_PROP_MODE_REPLACE, window, XCB_ATOM_WM_CLASS,
-		XCB_ATOM_STRING, 8, strlen("xcbsimple\0xcbsimple\0"),
-		"xcbsimple\0xcbsimple\0"
+		XCB_ATOM_STRING, 8, sizeof(XCBSIMPLE_WM_CLASS) - 1,
+		XCBSIMPLE_WM_CLASS
 	);
 
 	xcb_change_property(
