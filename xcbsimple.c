@@ -56,6 +56,7 @@
 #define UNUSED __attribute__((unused))
 #define DEFAULT_MESSAGE "hi\nthis is a sample text\n\t\tfeel free to edit!\n"
 #define RECT(x,y,w,h) ((const Rect) { x, y, w, h })
+#define SPEED (8)
 
 #define XCBSIMPLE_WM_NAME "xcbsimple"
 #define XCBSIMPLE_WM_CLASS "xcbsimple\0xcbsimple\0"
@@ -75,8 +76,11 @@ static xcb_image_t *image;
 static xcb_key_symbols_t *ksyms;
 static uint32_t color;
 static uint32_t width, height;
+static int off_x = 20, off_y = 60;
+static int mouse_x, mouse_y;
 static uint32_t *px, pc;
 static bool should_close;
+static const char *filename;
 
 static void
 die(const char *fmt, ...)
@@ -91,31 +95,62 @@ die(const char *fmt, ...)
 	exit(1);
 }
 
-static void
-render_text(const char *text, const Rect r)
+static uint32_t
+measure_word_width(const char *text)
 {
-	uint32_t cx, cy, gx, gy;
+	uint32_t word_width = 0;
+	while (*text) {
+		if (*text == ' ' || *text == '\t' || *text == '\n' || *text == '\r' || *text == '\0')
+			break;
+		word_width += 7;
+		++text;
+	}
+	return word_width;
+}
+
+static void
+render_text(const char *text, const Rect r, uint32_t color)
+{
+	uint32_t cx, cy, gx, gy, ux;
 	unsigned char *glyph;
 	const char *p;
+	bool previous_was_blank = true;
+	bool is_beggining_of_word;
 
 	p = text;
 	cx = r.x;
 	cy = r.y;
 
 	while (*p != '\0') {
+		is_beggining_of_word = previous_was_blank;
+		previous_was_blank = false;
 		if (*p == '\n') {
 			cx = r.x;
 			cy += 10;
+			previous_was_blank = true;
 		} else if (*p == '\t') {
 			cx += 7 * 4;
+			previous_was_blank = true;
+		} else if (*p == ' ') {
+			cx += 7;
+			previous_was_blank = true;
 		} else {
+			if (is_beggining_of_word) {
+				uint32_t word_width = measure_word_width(p);
+				if (mouse_x >= (int)cx && mouse_y >= (int)cy && mouse_y <= (int)cy + 7 && mouse_x < (int)cx + (int)word_width)
+					for (ux = 0; ux < word_width; ++ux)
+						if (cy + 9 < height && cy + 9 - r.y < r.height
+								&& cx + ux < width && cx + ux - r.x <  r.width)
+							px[(cy + 9) * width + cx + ux] = 0xff0000;
+
+			}
 			glyph = five_by_seven + *p*7;
 			for (gy = 0; gy < 7; ++gy)
 				for (gx = 0; gx < 5; ++gx)
 					if (glyph[gy] & (1 << (4 - gx))
 							&& cy + gy < height && cy + gy - r.y < r.height
 							&& cx + gx <  width && cx + gx - r.x <  r.width)
-						px[(cy + gy) * width + cx + gx] = 0xffffff;
+						px[(cy + gy) * width + cx + gx] = color;
 			cx += 7;
 		}
 
@@ -170,6 +205,7 @@ create_window(void)
 		(const xcb_create_window_value_list_t []) {{
 			.event_mask = XCB_EVENT_MASK_EXPOSURE |
 			              XCB_EVENT_MASK_KEY_PRESS |
+						  XCB_EVENT_MASK_POINTER_MOTION |
 			              XCB_EVENT_MASK_STRUCTURE_NOTIFY
 		}}
 	);
@@ -225,7 +261,14 @@ prepare_render(void)
 	for (i = 0; i < pc; ++i)
 		px[i] = color;
 
-	render_text(message, RECT(20, 20, width - 40, height - 40));
+	char position[128] = {0};
+	snprintf(&position[0], sizeof(position), "(%d, %d)", off_x, off_y);
+
+	render_text(&position[0], RECT(off_x, off_y - 40, 500, 200), 0xff00f3);
+	render_text(filename, RECT(off_x, off_y - 20, 500, 200), 0xffff00);
+	render_text(message, RECT(off_x, off_y, width - off_x, height - off_y - 64), 0xffffff);
+
+	render_text("h,j,k,l: move text around\nctrl+space: change background color", RECT(20, height-44, 500, 20), 0xaaaa00);
 }
 
 static void
@@ -265,6 +308,16 @@ h_key_press(xcb_key_press_event_t *ev)
 			xcb_flush(conn);
 		}
 		break;
+	case XKB_KEY_h:
+	case XKB_KEY_j:
+	case XKB_KEY_k:
+	case XKB_KEY_l:
+		off_x += ((key == XKB_KEY_h) * -1 + (key == XKB_KEY_l)) * SPEED;
+		off_y += ((key == XKB_KEY_k) * -1 + (key == XKB_KEY_j)) * SPEED;
+		prepare_render();
+		xcb_image_put(conn, window, gc, image, 0, 0, 0);
+		xcb_flush(conn);
+		break;
 	}
 }
 
@@ -285,6 +338,17 @@ h_configure_notify(xcb_configure_notify_event_t *ev)
 		conn, width, height, XCB_IMAGE_FORMAT_Z_PIXMAP, screen->root_depth,
 		px, sizeof(uint32_t) * pc, (uint8_t *)(px)
 	);
+
+	prepare_render();
+	xcb_image_put(conn, window, gc, image, 0, 0, 0);
+	xcb_flush(conn);
+}
+
+static void
+h_motion_notify(xcb_motion_notify_event_t *ev)
+{
+	mouse_x = (int)ev->event_x;
+	mouse_y = (int)ev->event_y;
 
 	prepare_render();
 	xcb_image_put(conn, window, gc, image, 0, 0, 0);
@@ -333,12 +397,13 @@ main(int argc, char **argv)
 	xcb_generic_event_t *ev;
 
 	message = argc > 1 ? readfile_str(argv[1]) : strdup(DEFAULT_MESSAGE);
+	filename = argc > 1 ? argv[1] : "sample_file.txt";
 
 	/* seed rand with the current process id */
 	srand((unsigned int)(getpid()));
 
 	create_window();
-	set_color(rand() % 0xffffff);
+	set_color(0x290f53);
 	prepare_render();
 
 	while (!should_close && (ev = xcb_wait_for_event(conn))) {
@@ -347,6 +412,7 @@ main(int argc, char **argv)
 		case XCB_EXPOSE:             h_expose((void *)(ev)); break;
 		case XCB_KEY_PRESS:          h_key_press((void *)(ev)); break;
 		case XCB_CONFIGURE_NOTIFY:   h_configure_notify((void *)(ev)); break;
+		case XCB_MOTION_NOTIFY:      h_motion_notify((void *)(ev)); break;
 		case XCB_MAPPING_NOTIFY:     h_mapping_notify((void *)(ev)); break;
 		}
 
